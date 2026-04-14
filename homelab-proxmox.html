@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proxmox Home Lab Build — Documentation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0c10;
+      --surface: #111418;
+      --surface2: #181c22;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.13);
+      --accent: #00e5a0;
+      --accent2: #007cf0;
+      --accent3: #ffb400;
+      --danger: #ff5f57;
+      --text: #e8eaf0;
+      --muted: #7a8194;
+      --mono: 'Share Tech Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,160,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,160,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(10,12,16,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-logo span { color: var(--muted); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .nav-back {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+
+    .nav-back:hover { color: var(--accent); }
+
+    .nav-tag {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      background: rgba(0,229,160,0.08);
+      border: 1px solid rgba(0,229,160,0.2);
+      padding: 0.3rem 0.75rem;
+      border-radius: 2px;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── LAYOUT ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 7rem 2.5rem 5rem;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .page-wrap { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: sticky;
+      top: 5rem;
+    }
+
+    .sidebar-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+
+    .sidebar-header {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .sidebar-body { padding: 1rem; }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: color 0.2s;
+      letter-spacing: 0.04em;
+    }
+
+    .toc-link:last-child { border-bottom: none; }
+    .toc-link:hover { color: var(--accent); }
+    .toc-num { color: var(--border2); }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--border);
+      gap: 0.5rem;
+    }
+
+    .spec-row:last-child { border-bottom: none; }
+
+    .spec-key {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .spec-val {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+      background: rgba(0,229,160,0.08);
+      border: 1px solid rgba(0,229,160,0.2);
+      padding: 0.25rem 0.6rem;
+      border-radius: 2px;
+      letter-spacing: 0.08em;
+    }
+
+    .dot-live {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .doc-header {
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.2s ease forwards;
+    }
+
+    .doc-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      margin-bottom: 1rem;
+    }
+
+    .doc-eyebrow a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .doc-eyebrow a:hover { text-decoration: underline; }
+
+    .doc-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .doc-title span { color: var(--accent); }
+
+    .doc-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    .meta-item {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .meta-item b { color: var(--text); font-weight: 400; }
+
+    .doc-summary {
+      margin-top: 1.5rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 4px 4px 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ── VM CARDS ── */
+    .vm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+    }
+
+    .vm-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1rem;
+    }
+
+    .vm-os {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--accent2);
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    .vm-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .vm-role {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── SECTIONS ── */
+    .doc-section {
+      margin-bottom: 3.5rem;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .doc-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-anchor {
+      display: block;
+      position: relative;
+      top: -5rem;
+      visibility: hidden;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.14em;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-heading {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .prose {
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: 1.25rem;
+    }
+
+    .prose strong { color: var(--text); font-weight: 700; }
+
+    .prose code {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--accent);
+      background: rgba(0,229,160,0.07);
+      padding: 0.15rem 0.4rem;
+      border-radius: 2px;
+    }
+
+    /* ── STEPS ── */
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 1.5rem 0;
+    }
+
+    .step {
+      display: flex;
+      gap: 1.25rem;
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .step:last-child { border-bottom: none; }
+
+    .step-num {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      min-width: 2rem;
+      padding-top: 0.1rem;
+      letter-spacing: 0.06em;
+    }
+
+    .step-content {}
+
+    .step-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .step-body {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .step-body code {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--accent);
+      background: rgba(0,229,160,0.07);
+      padding: 0.15rem 0.4rem;
+      border-radius: 2px;
+    }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 1.25rem 0;
+    }
+
+    .code-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    .code-lang {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent2);
+      letter-spacing: 0.08em;
+    }
+
+    .code-body {
+      padding: 1.25rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text);
+      line-height: 1.9;
+      overflow-x: auto;
+    }
+
+    .code-body .c-green { color: var(--accent); }
+    .code-body .c-blue  { color: var(--accent2); }
+    .code-body .c-amber { color: var(--accent3); }
+    .code-body .c-muted { color: var(--muted); }
+    .code-body .c-red   { color: var(--danger); }
+
+    /* ── CALLOUT BOXES ── */
+    .callout {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-radius: 4px;
+      margin: 1.25rem 0;
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+
+    .callout-tip {
+      background: rgba(0,229,160,0.06);
+      border: 1px solid rgba(0,229,160,0.2);
+      color: rgba(0,229,160,0.9);
+    }
+
+    .callout-warn {
+      background: rgba(255,180,0,0.06);
+      border: 1px solid rgba(255,180,0,0.25);
+      color: rgba(255,180,0,0.9);
+    }
+
+    .callout-issue {
+      background: rgba(255,95,87,0.06);
+      border: 1px solid rgba(255,95,87,0.25);
+      color: rgba(255,95,87,0.9);
+    }
+
+    .callout-icon {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      padding-top: 0.1rem;
+    }
+
+    /* ── VIRTIO FIX STEPS ── */
+    .numbered-steps {
+      counter-reset: steps;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 1rem 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .n-step {
+      counter-increment: steps;
+      display: flex;
+      gap: 1rem;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      align-items: flex-start;
+    }
+
+    .n-step:last-child { border-bottom: none; }
+
+    .n-step::before {
+      content: counter(steps, decimal-leading-zero);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      min-width: 2rem;
+      padding-top: 0.1rem;
+    }
+
+    .n-step code {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--accent3);
+      background: rgba(255,180,0,0.07);
+      padding: 0.1rem 0.35rem;
+      border-radius: 2px;
+    }
+
+    /* ── TAKEAWAYS ── */
+    .takeaway-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    @media (max-width: 580px) {
+      .takeaway-grid { grid-template-columns: 1fr; }
+    }
+
+    .takeaway-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1rem 1.25rem;
+    }
+
+    .takeaway-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .takeaway-text {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 2rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    footer p {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,160,0.4); }
+      50% { box-shadow: 0 0 0 5px rgba(0,229,160,0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="index.html" class="nav-logo"><span>~/</span>your-username</a>
+    <div class="nav-right">
+      <a href="index.html#homelab" class="nav-back">← Back to Portfolio</a>
+      <span class="nav-tag">HOME LAB</span>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+
+    <!-- MAIN CONTENT -->
+    <main>
+
+      <!-- HEADER -->
+      <header class="doc-header">
+        <p class="doc-eyebrow">
+          <a href="index.html">~/your-username</a>
+          <span style="color:var(--border2)"> / </span>
+          <a href="index.html#homelab">homelab</a>
+          <span style="color:var(--border2)"> / </span>
+          proxmox-ad-build
+        </p>
+        <h1 class="doc-title">Proxmox Home Lab — <span>Active Directory Build</span></h1>
+        <div class="doc-meta">
+          <span class="meta-item">Category: <b>Home Lab</b></span>
+          <span class="meta-item">Stack: <b>Proxmox · Windows Server 2022 · Ubuntu Server</b></span>
+          <span class="meta-item">Status: <b style="color:var(--accent)">Active / Ongoing</b></span>
+        </div>
+        <div class="doc-summary">
+          Built a bare-metal home lab on a Ryzen 7 3700X workstation running Proxmox VE. Goal was to replicate a real enterprise environment — Windows Server with Active Directory, managed Windows 10 clients, and a Linux file server — to develop practical, job-ready IT skills.
+        </div>
+      </header>
+
+      <!-- HARDWARE -->
+      <span class="section-anchor" id="hardware"></span>
+      <div class="doc-section">
+        <p class="section-label">// 01</p>
+        <h2 class="section-heading">Hardware &amp; Network</h2>
+        <p class="prose">The build is based around a mid-range desktop repurposed as a hypervisor host, paired with a managed switch to support VLAN segmentation down the road.</p>
+
+        <div class="vm-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px,1fr))">
+          <div class="vm-card">
+            <p class="vm-os">MOTHERBOARD</p>
+            <p class="vm-name">ASUS B450</p>
+            <p class="vm-role">AM4 platform, PCIe 3.0, dual M.2</p>
+          </div>
+          <div class="vm-card">
+            <p class="vm-os">CPU</p>
+            <p class="vm-name">Ryzen 7 3700X</p>
+            <p class="vm-role">8C/16T — plenty of headroom for multiple VMs</p>
+          </div>
+          <div class="vm-card">
+            <p class="vm-os">MEMORY</p>
+            <p class="vm-name">32 GB DDR4</p>
+            <p class="vm-role">3200 MHz — allocated across VMs as needed</p>
+          </div>
+          <div class="vm-card">
+            <p class="vm-os">STORAGE</p>
+            <p class="vm-name">256 GB SSD + 2× 2TB HDD</p>
+            <p class="vm-role">SSD for Proxmox & VM boot disks, HDDs for data</p>
+          </div>
+          <div class="vm-card">
+            <p class="vm-os">NETWORKING</p>
+            <p class="vm-name">TP-Link TL-SG2008 V3</p>
+            <p class="vm-role">8-port Gigabit smart managed switch — VLAN capable</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROXMOX INSTALL -->
+      <span class="section-anchor" id="proxmox"></span>
+      <div class="doc-section">
+        <p class="section-label">// 02</p>
+        <h2 class="section-heading">Installing Proxmox VE</h2>
+        <p class="prose">Proxmox VE is a Debian-based bare-metal hypervisor that lets you run both full VMs (KVM) and lightweight containers (LXC) from a web UI. It was the right choice here because it's free, enterprise-grade, and widely used in real IT environments.</p>
+
+        <div class="step-list">
+          <div class="step">
+            <span class="step-num">01.</span>
+            <div class="step-content">
+              <p class="step-title">Download the Proxmox VE ISO</p>
+              <p class="step-body">Grabbed the latest ISO from <strong>proxmox.com/downloads</strong>. At the time, this was Proxmox VE 8.x.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">02.</span>
+            <div class="step-content">
+              <p class="step-title">Create a bootable USB with Rufus</p>
+              <p class="step-body">First time making a bootable drive — used <strong>Rufus</strong> on Windows. Selected the ISO, left partition scheme as <code>GPT</code> for UEFI systems, and wrote it. Took a few minutes of confusion figuring out that Rufus needs to write in <strong>DD image mode</strong> for Proxmox to work correctly, not ISO mode.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">03.</span>
+            <div class="step-content">
+              <p class="step-title">Boot from USB and install</p>
+              <p class="step-body">Entered BIOS, set USB as first boot device, and followed the Proxmox graphical installer. Set the target disk to the <strong>256 GB SSD</strong>, configured a static IP for the management interface, and set a root password. Installation takes around 5 minutes.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">04.</span>
+            <div class="step-content">
+              <p class="step-title">Access the web UI</p>
+              <p class="step-body">After reboot, navigated to <code>https://[host-ip]:8006</code> in a browser on another machine. Logged in as <code>root</code>. The Proxmox dashboard was up and running — ready to create VMs.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">TIP</span>
+          <span>After install, Proxmox will warn about no valid subscription. You can dismiss this or add the free non-subscription repo in <code>/etc/apt/sources.list.d/</code> to keep updates flowing without needing a paid license.</span>
+        </div>
+      </div>
+
+      <!-- UBUNTU VM -->
+      <span class="section-anchor" id="ubuntu"></span>
+      <div class="doc-section">
+        <p class="section-label">// 03</p>
+        <h2 class="section-heading">Ubuntu Server VM — Samba File Share</h2>
+        <p class="prose">The first VM was an <strong>Ubuntu Server</strong> instance — familiar territory. The goal was to verify the lab networking was functional by standing up a <strong>Samba file share</strong> and accessing it from another machine on the network.</p>
+
+        <div class="step-list">
+          <div class="step">
+            <span class="step-num">01.</span>
+            <div class="step-content">
+              <p class="step-title">Upload the Ubuntu Server ISO to Proxmox</p>
+              <p class="step-body">In the Proxmox web UI, navigated to <strong>local storage → ISO Images → Upload</strong>. Uploaded the Ubuntu 22.04 LTS server ISO.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">02.</span>
+            <div class="step-content">
+              <p class="step-title">Create and configure the VM</p>
+              <p class="step-body">Created a new VM — allocated <strong>2 cores, 4 GB RAM, 32 GB disk</strong>. Attached the Ubuntu ISO as the boot CD-ROM. Standard network bridge (<code>vmbr0</code>) for connectivity.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">03.</span>
+            <div class="step-content">
+              <p class="step-title">Install Ubuntu and configure Samba</p>
+              <p class="step-body">Standard Ubuntu Server install through the console. Once up, installed Samba with <code>apt install samba</code>, created a shared directory, and edited <code>/etc/samba/smb.conf</code> to define the share. Verified connectivity by mounting the share from a Windows machine on the network.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">smb.conf — share definition</span>
+            <span class="code-lang">CONF</span>
+          </div>
+          <div class="code-body">
+<span class="c-amber">[labshare]</span>
+   <span class="c-blue">path</span> = <span class="c-green">/srv/samba/labshare</span>
+   <span class="c-blue">browseable</span> = <span class="c-green">yes</span>
+   <span class="c-blue">read only</span> = <span class="c-green">no</span>
+   <span class="c-blue">guest ok</span> = <span class="c-green">no</span>
+   <span class="c-blue">valid users</span> = <span class="c-green">@sambausers</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- WINDOWS SERVER -->
+      <span class="section-anchor" id="winserver"></span>
+      <div class="doc-section">
+        <p class="section-label">// 04</p>
+        <h2 class="section-heading">Windows Server 2022 — Active Directory</h2>
+        <p class="prose">The main objective of the lab. Getting a <strong>legitimate Windows Server license</strong> turned out to be easier than expected — Microsoft's Azure Dev Tools for Education (accessible via a <strong>.edu email address</strong>) provides free, genuine product keys for Windows Server, Windows 10/11, and other Microsoft software for educational use.</p>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">TIP</span>
+          <span>Log in to the Azure portal with your <strong>.edu email</strong>. Navigate past the initial popups to <strong>Azure Dev Tools for Education</strong> — you'll find legit product keys for Windows Server, Visual Studio, and more. Completely free for students.</span>
+        </div>
+
+        <div class="step-list">
+          <div class="step">
+            <span class="step-num">01.</span>
+            <div class="step-content">
+              <p class="step-title">Create the Windows Server VM</p>
+              <p class="step-body">Uploaded the Windows Server 2022 ISO to Proxmox. Created a new VM with <strong>4 cores, 8 GB RAM, 60 GB disk</strong>. Chose the <strong>Server Core (no GUI)</strong> option during install to conserve resources — all management done via PowerShell and CLI.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">02.</span>
+            <div class="step-content">
+              <p class="step-title">Install Active Directory Domain Services</p>
+              <p class="step-body">After booting into Server Core, the OS drops into a numbered menu. Navigated to <strong>option 15</strong> to drop into a full PowerShell session, then ran the following to install and configure AD DS:</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">PowerShell — AD DS installation</span>
+            <span class="code-lang">POWERSHELL</span>
+          </div>
+          <div class="code-body">
+<span class="c-muted"># Install the AD DS role</span>
+<span class="c-blue">Install-WindowsFeature</span> <span class="c-green">AD-Domain-Services</span> -IncludeManagementTools
+
+<span class="c-muted"># Promote to domain controller (creates new forest)</span>
+<span class="c-blue">Install-ADDSForest</span> `
+  -DomainName <span class="c-amber">"lab.local"</span> `
+  -DomainNetbiosName <span class="c-amber">"LAB"</span> `
+  -InstallDns:<span class="c-green">$true</span> `
+  -Force:<span class="c-green">$true</span>
+
+<span class="c-muted"># Server will reboot automatically after promotion</span>
+          </div>
+        </div>
+
+        <div class="step-list">
+          <div class="step">
+            <span class="step-num">03.</span>
+            <div class="step-content">
+              <p class="step-title">Create domain user accounts</p>
+              <p class="step-body">With AD DS running, used <code>New-ADUser</code> in PowerShell to create test accounts that could be used to log in from any domain-joined machine — simulating how a real enterprise environment manages identity centrally.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">PowerShell — create a domain user</span>
+            <span class="code-lang">POWERSHELL</span>
+          </div>
+          <div class="code-body">
+<span class="c-blue">New-ADUser</span> `
+  -Name <span class="c-amber">"John Doe"</span> `
+  -GivenName <span class="c-amber">"John"</span> `
+  -Surname <span class="c-amber">"Doe"</span> `
+  -SamAccountName <span class="c-amber">"jdoe"</span> `
+  -UserPrincipalName <span class="c-amber">"jdoe@lab.local"</span> `
+  -AccountPassword (ConvertTo-SecureString <span class="c-amber">"P@ssw0rd!"</span> -AsPlainText -Force) `
+  -Enabled <span class="c-green">$true</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- WINDOWS 10 VMs -->
+      <span class="section-anchor" id="win10"></span>
+      <div class="doc-section">
+        <p class="section-label">// 05</p>
+        <h2 class="section-heading">Windows 10 Pro VMs — Domain Clients</h2>
+        <p class="prose">Two <strong>Windows 10 Pro</strong> VMs were created to act as managed client machines. The Pro edition is required — Windows 10 Home cannot join an Active Directory domain.</p>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">NOTE</span>
+          <span>When creating a Windows VM in Proxmox, the recommended disk controller is <strong>VirtIO SCSI</strong> for performance — but Windows doesn't include VirtIO drivers by default, which causes the installer to see <em>no available disk</em>. This was the main issue hit during this phase.</span>
+        </div>
+
+        <div class="step-list">
+          <div class="step">
+            <span class="step-num">01.</span>
+            <div class="step-content">
+              <p class="step-title">Join the domain</p>
+              <p class="step-body">After a clean Windows 10 install, navigated to <strong>Settings → System → About → Join a domain</strong>, entered <code>lab.local</code>, and authenticated with the domain admin credentials. After a reboot, the machine was domain-joined and could log in with any AD user account created on the server.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">02.</span>
+            <div class="step-content">
+              <p class="step-title">Verify centralized login</p>
+              <p class="step-body">Signed out, then logged back in as a domain user (<code>LAB\jdoe</code>). Credentials were authenticated against the Windows Server DC — exactly how enterprise workstations behave in the real world.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TROUBLESHOOTING -->
+      <span class="section-anchor" id="troubleshooting"></span>
+      <div class="doc-section">
+        <p class="section-label">// 06</p>
+        <h2 class="section-heading">Troubleshooting — VirtIO Disk Issue</h2>
+
+        <div class="callout callout-issue">
+          <span class="callout-icon">ISSUE</span>
+          <span>When booting the Windows 10 installer in Proxmox, <strong>no storage device was visible</strong> even though a disk had been allocated. Root cause: Windows does not include VirtIO drivers out of the box, so it cannot see the virtual disk controller.</span>
+        </div>
+
+        <p class="prose" style="margin-top:1.25rem">The fix requires temporarily switching the disk to a SATA controller, injecting VirtIO drivers into Windows via Safe Mode, then switching back to VirtIO SCSI for normal operation. Here's the exact procedure that worked:</p>
+
+        <div class="numbered-steps">
+          <div class="n-step">Boot the VM using <strong>SATA controller</strong> initially and install VirtIO drivers for Windows from the VirtIO ISO (download from Fedora's VirtIO driver project).</div>
+          <div class="n-step">Force Windows into Safe Mode by running <code>bcdedit /set "{current}" safeboot minimal</code> in an admin CMD, then shut down the VM.</div>
+          <div class="n-step">In Proxmox, change drive C: to use <strong>SATA</strong> controller.</div>
+          <div class="n-step">Add a <strong>CD-ROM device</strong> in Proxmox pointing to the VirtIO SCSI driver. No media needed — the device presence alone is the trigger.</div>
+          <div class="n-step">Change the Proxmox boot order to boot from SATA.</div>
+          <div class="n-step">Start the VM. Because Windows detects the CD-ROM device, it <strong>bakes the VirtIO drivers</strong> into the system during the Safe Mode boot.</div>
+          <div class="n-step">Disable Safe Mode: <code>bcdedit /deletevalue "{current}" safeboot</code> and shut down.</div>
+          <div class="n-step">Remove the CD-ROM device added in step 4 from Proxmox.</div>
+          <div class="n-step">Change drive C: back to <strong>VirtIO SCSI</strong> controller in Proxmox.</div>
+          <div class="n-step">Update the Proxmox boot order to boot from <strong>VirtIO SCSI</strong>. Start the VM — storage is now recognized correctly.</div>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">TIP</span>
+          <span>The simpler prevention: when creating a new Windows VM in Proxmox, attach the <strong>VirtIO ISO as a second CD-ROM</strong> before the first boot and load the drivers during Windows Setup using "Load driver." Saves the whole Safe Mode process.</span>
+        </div>
+      </div>
+
+      <!-- CURRENT STATE -->
+      <span class="section-anchor" id="current"></span>
+      <div class="doc-section">
+        <p class="section-label">// 07</p>
+        <h2 class="section-heading">Current Lab State</h2>
+        <p class="prose">The lab currently runs four VMs on the Proxmox host:</p>
+
+        <div class="vm-grid">
+          <div class="vm-card">
+            <p class="vm-os" style="color:var(--accent)">ONLINE</p>
+            <p class="vm-name">Ubuntu Server</p>
+            <p class="vm-role">Samba file share, general Linux practice, scripting</p>
+          </div>
+          <div class="vm-card">
+            <p class="vm-os" style="color:var(--accent)">ONLINE</p>
+            <p class="vm-name">Windows Server 2022</p>
+            <p class="vm-role">Domain controller, AD DS, DNS — no GUI (Server Core)</p>
+          </div>
+          <div class="vm-card">
+            <p class="vm-os" style="color:var(--accent)">ONLINE</p>
+            <p class="vm-name">Windows 10 Pro #1</p>
+            <p class="vm-role">Domain-joined client — user management testing</p>
+          </div>
+          <div class="vm-card">
+            <p class="vm-os" style="color:var(--accent)">ONLINE</p>
+            <p class="vm-name">Windows 10 Pro #2</p>
+            <p class="vm-role">Domain-joined client — GPO &amp; policy testing</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAKEAWAYS -->
+      <span class="section-anchor" id="takeaways"></span>
+      <div class="doc-section">
+        <p class="section-label">// 08</p>
+        <h2 class="section-heading">What I Learned</h2>
+
+        <div class="takeaway-grid">
+          <div class="takeaway-card">
+            <p class="takeaway-label">BOOTABLE MEDIA</p>
+            <p class="takeaway-text">Rufus write mode matters — Proxmox requires DD image mode, not ISO. Small detail with a big impact if you get it wrong.</p>
+          </div>
+          <div class="takeaway-card">
+            <p class="takeaway-label">HYPERVISOR CONCEPTS</p>
+            <p class="takeaway-text">Hands-on with KVM virtualization, VM resource allocation, disk controller types, and virtual networking bridges.</p>
+          </div>
+          <div class="takeaway-card">
+            <p class="takeaway-label">ACTIVE DIRECTORY</p>
+            <p class="takeaway-text">Deploying AD DS from scratch via PowerShell on Server Core — no GUI safety net. Creating users, resetting passwords, and troubleshooting domain joins.</p>
+          </div>
+          <div class="takeaway-card">
+            <p class="takeaway-label">DRIVER TROUBLESHOOTING</p>
+            <p class="takeaway-text">Diagnosed and resolved a VirtIO driver conflict in Windows — a real-world class of problem common in virtualized and cloud environments.</p>
+          </div>
+          <div class="takeaway-card">
+            <p class="takeaway-label">LINUX FILE SERVICES</p>
+            <p class="takeaway-text">Configured Samba for cross-platform file sharing — a staple skill in mixed Windows/Linux enterprise environments.</p>
+          </div>
+          <div class="takeaway-card">
+            <p class="takeaway-label">STILL LEARNING</p>
+            <p class="takeaway-text">Continuing to explore AD user management, Group Policy Objects (GPO), password policies, and more complex domain scenarios.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="sidebar-box">
+        <div class="sidebar-header">STATUS</div>
+        <div class="sidebar-body">
+          <div class="status-pill"><div class="dot-live"></div> Lab Active</div>
+        </div>
+      </div>
+
+      <div class="sidebar-box">
+        <div class="sidebar-header">CONTENTS</div>
+        <div class="sidebar-body">
+          <a href="#hardware" class="toc-link"><span class="toc-num">01</span> Hardware &amp; Network</a>
+          <a href="#proxmox" class="toc-link"><span class="toc-num">02</span> Installing Proxmox</a>
+          <a href="#ubuntu" class="toc-link"><span class="toc-num">03</span> Ubuntu + Samba</a>
+          <a href="#winserver" class="toc-link"><span class="toc-num">04</span> Windows Server + AD</a>
+          <a href="#win10" class="toc-link"><span class="toc-num">05</span> Windows 10 Clients</a>
+          <a href="#troubleshooting" class="toc-link"><span class="toc-num">06</span> Troubleshooting</a>
+          <a href="#current" class="toc-link"><span class="toc-num">07</span> Current State</a>
+          <a href="#takeaways" class="toc-link"><span class="toc-num">08</span> What I Learned</a>
+        </div>
+      </div>
+
+      <div class="sidebar-box">
+        <div class="sidebar-header">HARDWARE SPECS</div>
+        <div class="sidebar-body">
+          <div class="spec-row"><span class="spec-key">CPU</span><span class="spec-val">Ryzen 7 3700X</span></div>
+          <div class="spec-row"><span class="spec-key">BOARD</span><span class="spec-val">ASUS B450</span></div>
+          <div class="spec-row"><span class="spec-key">RAM</span><span class="spec-val">32 GB DDR4</span></div>
+          <div class="spec-row"><span class="spec-key">BOOT</span><span class="spec-val">256 GB SSD</span></div>
+          <div class="spec-row"><span class="spec-key">DATA</span><span class="spec-val">2× 2TB HDD</span></div>
+          <div class="spec-row"><span class="spec-key">SWITCH</span><span class="spec-val">TP-Link SG2008</span></div>
+          <div class="spec-row"><span class="spec-key">HYPERVISOR</span><span class="spec-val">Proxmox VE</span></div>
+        </div>
+      </div>
+
+      <div class="sidebar-box">
+        <div class="sidebar-header">RUNNING VMs</div>
+        <div class="sidebar-body">
+          <div class="spec-row"><span class="spec-key" style="color:var(--accent)">●</span><span class="spec-val">Ubuntu Server</span></div>
+          <div class="spec-row"><span class="spec-key" style="color:var(--accent)">●</span><span class="spec-val">Windows Server 2022</span></div>
+          <div class="spec-row"><span class="spec-key" style="color:var(--accent)">●</span><span class="spec-val">Windows 10 Pro ×2</span></div>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p><a href="index.html">← Back to Portfolio</a></p>
+    <p>Your Name — Home Lab Documentation</p>
+  </footer>
+
+  <script>
+    const sections = document.querySelectorAll('.doc-section');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    sections.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
