@@ -665,16 +665,26 @@
     <h2 class="section-title reveal">School &amp; <span>Personal</span> Projects</h2>
     <div class="projects-grid">
 
-      <div class="project-card reveal" style="border-style: dashed; opacity: 0.5; cursor: default;">
+      <a href="homelab-proxmox.html" class="project-card reveal">
         <div class="card-header">
-          <div class="card-icon green" style="font-size:0.9rem;">+</div>
+          <div class="card-icon green">🖥</div>
+          <span class="card-arrow">↗</span>
         </div>
         <div>
-          <p class="card-type">// COMING SOON</p>
-          <p class="card-title">Projects Being Documented</p>
+          <p class="card-type">// HOME LAB</p>
+          <p class="card-title">Proxmox Home Lab — Active Directory Build</p>
         </div>
-        <p class="card-desc">School and personal projects will be added here as they are documented.</p>
-      </div>
+        <p class="card-desc">
+          Built a bare-metal hypervisor on a Ryzen 7 3700X running Proxmox VE. Deployed Windows Server 2022 (Server Core) with Active Directory, domain-joined Windows 10 Pro clients, and an Ubuntu Samba file server.
+        </p>
+        <div class="card-tags">
+          <span class="card-tag">Proxmox</span>
+          <span class="card-tag">Active Directory</span>
+          <span class="card-tag">Windows Server</span>
+          <span class="card-tag">Ubuntu</span>
+          <span class="card-tag">PowerShell</span>
+        </div>
+      </a>
 
     </div>
   </section>
@@ -752,9 +762,4 @@
     <p style="font-family: var(--mono); font-size: 0.72rem; color: var(--muted);">Last updated: 2026</p>
   </footer>
 
-  <script>
-    const reveals = document.querySelectorAll('.reveal');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((e, i) => {
-        if (e.isIntersecting) {
-    
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudfl
